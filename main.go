@@ -20,7 +20,7 @@ func webhook(w http.ResponseWriter, r *http.Request) {
 		respond(w, 500, map[string]any{"err": err})
 		return
 	}
-	log.Printf("request: %s\n", string(b))
+	log.Printf("webhook: %s\n", string(b))
 	respond(w, 200, map[string]string{})
 }
 
@@ -31,7 +31,7 @@ func jit(w http.ResponseWriter, r *http.Request) {
 		respond(w, 500, map[string]any{"err": err})
 		return
 	}
-	log.Printf("request: %s\n", string(b))
+	log.Printf("jit: %s\n", string(b))
 	respond(w, 200, map[string]string{})
 }
 
