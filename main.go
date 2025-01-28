@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/itchyny/gojq"
 )
 
 func respond(w http.ResponseWriter, code int, data any) {
@@ -32,7 +35,25 @@ func jit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("jit: %s\n", string(b))
-	respond(w, 200, map[string]string{})
+
+	var request any
+	if err := json.NewDecoder(bytes.NewReader(b)).Decode(&request); err != nil {
+		respond(w, 500, map[string]any{"err": err})
+		return
+	}
+	query, err := gojq.Parse(`{jit_funding:.gpa_order.jit_funding}`)
+	if err != nil {
+		respond(w, 500, map[string]any{"err": err})
+		return
+	}
+	iter := query.Run(request)
+	xformed, ok := iter.Next()
+	if !ok {
+		respond(w, 500, map[string]any{"err": "unable to apply transform"})
+		return
+	}
+
+	respond(w, 200, xformed)
 }
 
 func main() {
