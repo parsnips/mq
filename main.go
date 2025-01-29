@@ -32,7 +32,6 @@ func graphql(w http.ResponseWriter, r *http.Request) {
 		Header: r.Header.Clone(),
 		Body:   r.Body,
 	}
-	log.Printf("tok: %s", os.Getenv("SLIPLANE_OPENID_TOKEN"))
 	req.Header.Set("authorization", fmt.Sprintf("Bearer %s", os.Getenv("SLIPLANE_OPENID_TOKEN")))
 	req.Header.Set("x-twisp-account-id", "01eac529-86c7-4186-9e56-3f0ec2005d3a")
 
@@ -51,13 +50,13 @@ func graphql(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("graphql: %s %d\n", respB, resp.StatusCode)
 
-	var blah any
-	if err := json.NewDecoder(bytes.NewReader(respB)).Decode(&blah); err != nil {
+	var respondBody any
+	if err := json.NewDecoder(bytes.NewReader(respB)).Decode(&respondBody); err != nil {
 		respond(w, 500, map[string]any{"err": err})
 		return
 	}
 
-	respond(w, resp.StatusCode, blah)
+	respond(w, resp.StatusCode, respondBody)
 }
 
 func webhook(w http.ResponseWriter, r *http.Request) {
