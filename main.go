@@ -11,9 +11,13 @@ import (
 	"os"
 
 	"github.com/itchyny/gojq"
+	"github.com/parsnips/mq/pkg/client"
 )
 
 func respond(w http.ResponseWriter, code int, data any) {
+	if code != 200 {
+		fmt.Printf("err: %d %+v\n", code, data)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(data)
@@ -67,7 +71,15 @@ func webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("webhook: %s\n", string(b))
-	respond(w, 200, map[string]string{})
+
+	resp, err := client.PostTransaction(b)
+	if err != nil {
+		respond(w, 500, map[string]any{"err": err})
+		return
+	}
+
+	respCode := client.HandleWebhookResponse(resp)
+	respond(w, respCode, map[string]string{})
 }
 
 func jit(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +108,15 @@ func jit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respond(w, 200, xformed)
+	resp, err := client.PostTransaction(b)
+	if err != nil {
+		respond(w, 500, map[string]any{"err": err})
+		return
+	}
+
+	respCode := client.HandleJITResponse(resp)
+
+	respond(w, respCode, xformed)
 }
 
 func main() {
